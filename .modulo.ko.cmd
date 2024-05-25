@@ -1,0 +1,1 @@
+cmd_/home/user/drivers_so/modulo.ko := ld -r -m elf_x86_64 -z noexecstack --no-warn-rwx-segments --build-id=sha1  -T arch/x86/module.lds -o /home/user/drivers_so/modulo.ko /home/user/drivers_so/modulo.o /home/user/drivers_so/modulo.mod.o;  true
