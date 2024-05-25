@@ -29,10 +29,17 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     int numendpoints = interface->cur_altsetting->desc.bNumEndpoints;
 	
     printk(KERN_INFO "meu_driver_usb: interface=%X numEndpoints=%X", interface->cur_altsetting->desc.bInterfaceNumber, numendpoints);
-
-    int isInterrupt = usb_endpoint_xfer_int(&dev->ep_in[0]->desc);
-
-    printk(KERN_INFO "isInterrupt: %d", isInterrupt);
+    
+    for (int i = 0; i < 16; i++) {
+      if (dev->ep_in[i]) {
+        printk(KERN_INFO "dev->ep_in[%d] is NOT NULL", i);
+      }
+    }
+    for (int i = 0; i < 16; i++) {
+      if (dev->ep_out[i]) {
+        printk(KERN_INFO "dev->ep_out[%d] is NOT NULL", i);
+      }
+    }
 
     return retval;
 }
