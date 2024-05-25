@@ -30,6 +30,10 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
 	
     printk(KERN_INFO "meu_driver_usb: interface=%X numEndpoints=%X", interface->cur_altsetting->desc.bInterfaceNumber, numendpoints);
 
+    int isInterrupt = usb_endpoint_xfer_int(&dev->ep_in[0]->desc);
+
+    printk(KERN_INFO "isInterrupt: %d", isInterrupt);
+
     return retval;
 }
 
