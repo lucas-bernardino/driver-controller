@@ -30,8 +30,8 @@ MODULE_INFO(retpoline, "Y");
 static const struct modversion_info ____versions[]
 __used __section("__versions") = {
 	{ 0xbdfb6dbb, "__fentry__" },
-	{ 0xf61aa075, "usb_register_driver" },
 	{ 0x92997ed8, "_printk" },
+	{ 0xf61aa075, "usb_register_driver" },
 	{ 0x5b8239ca, "__x86_return_thunk" },
 	{ 0x77d0e34a, "usb_deregister" },
 	{ 0x6093f1a5, "module_layout" },

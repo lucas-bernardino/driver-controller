@@ -14,6 +14,22 @@ MODULE_DESCRIPTION("Meu Modulo USB");
 //   Interface com o subsistema USB
 // **********************************
 
+// Check what endpoints are not NULL
+void check_endpoints(struct usb_device* dev) {
+    for (int i = 0; i < 16; i++) {
+      if (dev->ep_in[i]) {
+        printk(KERN_INFO "INTERRUPT STATE - dev->ep_in[%d]: %d", i, usb_endpoint_xfer_int(&dev->ep_in[i]->desc));
+        printk(KERN_INFO "IN STATE - dev->ep_in[%d]: %d", i, usb_endpoint_dir_in(&dev->ep_in[i]->desc));
+      }
+    }
+    for (int i = 0; i < 16; i++) {
+      if (dev->ep_out[i]) {
+        printk(KERN_INFO "INTERRUPT STATE - dev->ep_out[%d]: %d", i, usb_endpoint_xfer_int(&dev->ep_out[i]->desc));
+        printk(KERN_INFO "IN STATE - dev->ep_out[%d]: %d", i, usb_endpoint_dir_in(&dev->ep_out[i]->desc));
+      }
+    }
+}
+
 // USB - Probe - Função de entrada quando um novo dispositivo é reconhecido para este modulo
 static int meu_driver_usb_probe(struct usb_interface *interface, const struct usb_device_id *id)
 {
@@ -29,17 +45,8 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     int numendpoints = interface->cur_altsetting->desc.bNumEndpoints;
 	
     printk(KERN_INFO "meu_driver_usb: interface=%X numEndpoints=%X", interface->cur_altsetting->desc.bInterfaceNumber, numendpoints);
-    
-    for (int i = 0; i < 16; i++) {
-      if (dev->ep_in[i]) {
-        printk(KERN_INFO "dev->ep_in[%d] is NOT NULL", i);
-      }
-    }
-    for (int i = 0; i < 16; i++) {
-      if (dev->ep_out[i]) {
-        printk(KERN_INFO "dev->ep_out[%d] is NOT NULL", i);
-      }
-    }
+  
+    check_endpoints(dev);
 
     return retval;
 }
