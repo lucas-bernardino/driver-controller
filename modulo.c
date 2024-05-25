@@ -15,12 +15,13 @@ MODULE_DESCRIPTION("Meu Modulo USB");
 // **********************************
 
 // Check what endpoints are not NULL
-void check_endpoints(struct usb_device* dev) {
+void check_endpoints(struct usb_device* dev, struct usb_interface *interface) {
     for (int i = 0; i < 16; i++) {
       if (dev->ep_in[i]) {
         printk(KERN_INFO "INTERRUPT STATE - dev->ep_in[%d]: %d", i, usb_endpoint_xfer_int(&dev->ep_in[i]->desc));
         printk(KERN_INFO "IN STATE - dev->ep_in[%d]: %d", i, usb_endpoint_dir_in(&dev->ep_in[i]->desc));
-      }
+        // printk(KERN_INFO "ADDRESS - %04X", interface->cur_altsetting->endpoint[i].desc.bEndpointAddress);  
+    }
     }
     for (int i = 0; i < 16; i++) {
       if (dev->ep_out[i]) {
@@ -29,6 +30,17 @@ void check_endpoints(struct usb_device* dev) {
       }
     }
 }
+
+void handle_urb(struct usb_device* dev, struct usb_interface *interface) {
+  
+  struct urb *my_urb = usb_alloc_urb(0, GFP_KERNEL);
+
+  if (!my_urb) {
+    printk(KERN_INFO "Error initialiazing urb");
+  }
+  
+}
+
 
 // USB - Probe - Função de entrada quando um novo dispositivo é reconhecido para este modulo
 static int meu_driver_usb_probe(struct usb_interface *interface, const struct usb_device_id *id)
@@ -45,8 +57,16 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     int numendpoints = interface->cur_altsetting->desc.bNumEndpoints;
 	
     printk(KERN_INFO "meu_driver_usb: interface=%X numEndpoints=%X", interface->cur_altsetting->desc.bInterfaceNumber, numendpoints);
-  
-    check_endpoints(dev);
+
+    for (int i = 0; i < numendpoints; i++) {
+      printk(KERN_INFO "ED[%d]->bEndpointAddress: 0x%02X\n", i, interface->cur_altsetting->endpoint[i].desc.bEndpointAddress);
+      printk(KERN_INFO "ED[%d]->bmAttributes: 0x%02X\n", i, interface->cur_altsetting->endpoint[i].desc.bmAttributes);
+      printk(KERN_INFO "ED[%d]->wMaxPacketSize: 0x%04X\n", i, interface->cur_altsetting->endpoint[i].desc.wMaxPacketSize);
+    }
+
+    check_endpoints(dev, interface);
+    
+    handle_urb(dev, interface);
 
     return retval;
 }

@@ -34,6 +34,7 @@ __used __section("__versions") = {
 	{ 0xf61aa075, "usb_register_driver" },
 	{ 0x5b8239ca, "__x86_return_thunk" },
 	{ 0x77d0e34a, "usb_deregister" },
+	{ 0x8d412927, "usb_alloc_urb" },
 	{ 0x6093f1a5, "module_layout" },
 };
 
