@@ -1,0 +1,71 @@
+
+Depending on the type and attributes of information to be transferred, a USB device may have one or more endpoints, 
+each belonging to one of the following four categories:
+
+    Control – For transferring control information. Examples include resetting the device, querying information about the device, etc. 
+    All USB devices always have the default control endpoint point zero.
+    
+    Interrupt – For small and fast data transfer, typically of up to 8 bytes. 
+    Examples include data transfer for serial ports, human interface devices (HIDs) like keyboard, mouse, etc.
+    
+    Bulk – For big but comparatively slow data transfer. 
+    A typical example is data transfers for mass storage devices.
+    
+    Isochronous – For big data transfer with bandwidth guarantee, though data integrity may not be guaranteed. 
+    Typical practical usage examples include transfers of time-sensitive data like of audio, video, etc.
+
+Additionally, all but control endpoints could be “in” or “out”, indicating its direction of data transfer. 
+“in” indicates data flow from USB device to the host machine and “out” indicates data flow from the host machine to USB device. 
+Technically, an endpoint is identified using a 8-bit number, most significant bit (MSB) of which indicates the direction – 0 meaning out, and 1 meaning in. 
+Control endpoints are bi-directional and the MSB is ignored.
+
+No nosso controle:
+INTERRUPT STATE - dev->ep_in[0]: 0
+IN STATE - dev->ep_in[0]: 0 
+INTERRUPT STATE - dev->ep_in[2]: 1
+IN STATE - dev->ep_in[2]: 1
+INTERRUPT STATE - dev->ep_out[0]: 0
+IN STATE - dev->ep_out[0]: 0
+INTERRUPT STATE - dev->ep_out[2]: 1
+IN STATE - dev->ep_out[2]: 0
+
+Output de 'cat /sys/kernel/debug/usb/devices':
+
+T:  Bus=01 Lev=01 Prnt=01 Port=01 Cnt=01 Dev#=  4 Spd=12   MxCh= 0
+D:  Ver= 2.00 Cls=ff(vend.) Sub=47 Prot=d0 MxPS=64 #Cfgs=  1
+P:  Vendor=045e ProdID=0b12 Rev= 5.0b
+S:  Manufacturer=Microsoft
+S:  Product=Controller
+S:  SerialNumber=3039373031323033303935313131
+C:* #Ifs= 3 Cfg#= 1 Atr=a0 MxPwr=500mA
+I:* If#= 0 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=47 Prot=d0 Driver=meu_driver_usb
+E:  Ad=02(O) Atr=03(Int.) MxPS=  64 Ivl=4ms
+E:  Ad=82(I) Atr=03(Int.) MxPS=  64 Ivl=4ms
+I:  If#= 0 Alt= 1 #EPs= 2 Cls=ff(vend.) Sub=47 Prot=d0 Driver=meu_driver_usb
+E:  Ad=02(O) Atr=03(Int.) MxPS=  64 Ivl=4ms
+E:  Ad=82(I) Atr=03(Int.) MxPS=  64 Ivl=2ms
+I:* If#= 1 Alt= 0 #EPs= 0 Cls=ff(vend.) Sub=47 Prot=d0 Driver=(none)
+I:  If#= 1 Alt= 1 #EPs= 2 Cls=ff(vend.) Sub=47 Prot=d0 Driver=(none)
+E:  Ad=03(O) Atr=01(Isoc) MxPS= 228 Ivl=1ms
+E:  Ad=83(I) Atr=01(Isoc) MxPS=  64 Ivl=1ms
+I:* If#= 2 Alt= 0 #EPs= 0 Cls=ff(vend.) Sub=47 Prot=d0 Driver=(none)
+I:  If#= 2 Alt= 1 #EPs= 2 Cls=ff(vend.) Sub=47 Prot=d0 Driver=(none)
+E:  Ad=04(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+E:  Ad=84(I) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+
+[ 3460.917107] ED[0]->bEndpointAddress: 0x02
+[ 3460.917109] ED[0]->bmAttributes: 0x03
+[ 3460.917110] ED[1]->bEndpointAddress: 0x82
+[ 3460.917110] ED[1]->bmAttributes: 0x03
+
+Ver pq isso nao funciona
+    // void* buffer = kmalloc(interface->cur_altsetting->endpoint[0].desc.wMaxPacketSize, GFP_KERNEL);
+    //
+    // int* actual_length = NULL;
+    //
+    // if (!buffer) {
+    //   printk(KERN_INFO "Problem allocating memory");
+    //   return retval;
+    // }
+    // int message_output = usb_interrupt_msg(dev, interface->cur_altsetting->endpoint[1].desc.bEndpointAddress, buffer, interface->cur_altsetting->endpoint[1].desc.wMaxPacketSize, actual_length, 100);
+ 
