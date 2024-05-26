@@ -1,1 +1,1 @@
-cmd_/home/user/drivers_so/modules.order := {   echo /home/user/drivers_so/modulo.ko; :; } > /home/user/drivers_so/modules.order
+cmd_/home/user/driver/driver-controller/modules.order := {   echo /home/user/driver/driver-controller/modulo.ko; :; } > /home/user/driver/driver-controller/modules.order

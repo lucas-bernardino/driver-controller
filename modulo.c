@@ -40,6 +40,8 @@ static struct usb_controller {
 
 static void read_callback(struct urb *urb) {
 
+  printk(KERN_INFO "Within callback");
+
   struct usb_controller *controller = urb->context;
   char* data = controller->buffer;
 
@@ -95,13 +97,35 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
       return retval;
     }
     
-    controller->pipe = usb_rcvintpipe(dev, interface->cur_altsetting->endpoint[0].desc.bEndpointAddress);
+    struct usb_endpoint_descriptor *ep_irq_in, *ep_irq_out;
+    ep_irq_in = NULL;
+    ep_irq_out = NULL;
+
+    for (int i = 0; i < 2; i++) {
+      struct usb_endpoint_descriptor *ep = &interface->cur_altsetting->endpoint[i].desc;
+      if (usb_endpoint_xfer_int(ep)) {
+        if (usb_endpoint_dir_in(ep))
+          ep_irq_in = ep;
+        else
+          ep_irq_out = ep;
+      }
+    }
+
+    if (!ep_irq_in || !ep_irq_out) {
+      printk(KERN_INFO "Muita treta\n");
+      return retval;
+    }
+
+    controller->pipe = usb_rcvintpipe(dev, ep_irq_in->bEndpointAddress);
     controller->buffer = usb_alloc_coherent(dev, 64, GFP_KERNEL, &controller->dma_addr);
     
-    usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, interface->cur_altsetting->endpoint[0].desc.bInterval);
+    printk(KERN_INFO "usb_fill_int_urb init\n");
+    usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, ep_irq_in->bEndpointAddress);
  
+    printk(KERN_INFO "usb_set_infdata init\n");
     usb_set_intfdata(interface, controller);
-
+  
+    printk(KERN_INFO "probe end");
     return retval;
 }
 

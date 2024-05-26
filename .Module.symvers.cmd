@@ -1,1 +1,1 @@
-cmd_/home/user/drivers_so/Module.symvers :=  sed 's/ko$$/o/'  /home/user/drivers_so/modules.order | scripts/mod/modpost -m     -o /home/user/drivers_so/Module.symvers -e -i Module.symvers -T - 
+cmd_/home/user/driver/driver-controller/Module.symvers :=  sed 's/ko$$/o/'  /home/user/driver/driver-controller/modules.order | scripts/mod/modpost -m     -o /home/user/driver/driver-controller/Module.symvers -e -i Module.symvers -T - 
