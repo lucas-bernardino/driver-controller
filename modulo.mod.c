@@ -33,8 +33,12 @@ __used __section("__versions") = {
 	{ 0x92997ed8, "_printk" },
 	{ 0xf61aa075, "usb_register_driver" },
 	{ 0x5b8239ca, "__x86_return_thunk" },
+	{ 0xe95070ae, "usb_submit_urb" },
 	{ 0x77d0e34a, "usb_deregister" },
+	{ 0x4c12d3f3, "kmalloc_caches" },
+	{ 0xdcf9792a, "kmalloc_trace" },
 	{ 0x8d412927, "usb_alloc_urb" },
+	{ 0x34aa0fe1, "usb_alloc_coherent" },
 	{ 0x6093f1a5, "module_layout" },
 };
 

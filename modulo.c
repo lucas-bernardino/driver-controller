@@ -31,16 +31,33 @@ void check_endpoints(struct usb_device* dev, struct usb_interface *interface) {
     }
 }
 
-void handle_urb(struct usb_device* dev, struct usb_interface *interface) {
-  
-  struct urb *my_urb = usb_alloc_urb(0, GFP_KERNEL);
+static struct usb_controller {
+  int pipe;
+  dma_addr_t dma_addr;
+  char *buffer;
+  struct urb *my_urb;
+};
 
-  if (!my_urb) {
-    printk(KERN_INFO "Error initialiazing urb");
-  }
+static void read_callback(struct urb *urb) {
+
+  struct usb_controller *controller = urb->context;
+  char* data = controller->buffer;
+
+  printk(KERN_ALERT "URB STATUS: %d", urb->status);
+
+  printk(KERN_ALERT "data[0]=%d\n", data[0]);
+	printk(KERN_ALERT "data[1]=%d\n", data[1]);
+	printk(KERN_ALERT "data[2]=%d\n", data[2]);
+	printk(KERN_ALERT "data[3]=%d\n", data[3]);
+	printk(KERN_ALERT "data[4]=%d\n", data[4]);
+	printk(KERN_ALERT "data[5]=%d\n", data[5]);
+	printk(KERN_ALERT "data[6]=%d\n", data[6]);
+	printk(KERN_ALERT "data[7]=%d\n", data[7]);
   
+  int submit_val = usb_submit_urb(urb, GFP_ATOMIC);
+  printk(KERN_INFO "submit_val: %d", submit_val);
+
 }
-
 
 // USB - Probe - Função de entrada quando um novo dispositivo é reconhecido para este modulo
 static int meu_driver_usb_probe(struct usb_interface *interface, const struct usb_device_id *id)
@@ -66,7 +83,24 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
 
     check_endpoints(dev, interface);
     
-    handle_urb(dev, interface);
+    struct usb_controller *controller = kzalloc(sizeof(struct usb_controller) , GFP_KERNEL);
+    if (!controller) {
+      printk(KERN_WARNING "ERROR: Could not alloc controller.");
+      return retval;
+    }
+
+    controller->my_urb = usb_alloc_urb(0, GFP_KERNEL);
+    if (!controller->my_urb) {
+      printk(KERN_WARNING "ERROR: Could not alloc urb.");
+      return retval;
+    }
+    
+    controller->pipe = usb_rcvintpipe(dev, interface->cur_altsetting->endpoint[0].desc.bEndpointAddress);
+    controller->buffer = usb_alloc_coherent(dev, 64, GFP_KERNEL, &controller->dma_addr);
+    
+    usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, interface->cur_altsetting->endpoint[0].desc.bInterval);
+ 
+    usb_set_intfdata(interface, controller);
 
     return retval;
 }
@@ -80,7 +114,7 @@ static void meu_driver_usb_disconnect(struct usb_interface *interface)
 // USB - Tabela de dispositivos 
 static struct usb_device_id minha_tabela_usb[] =
 {
-    { USB_DEVICE(0x045E, 0xB12) },
+    { USB_DEVICE(0x045e, 0x0b12) },
     {} // Entrada final
 };
 MODULE_DEVICE_TABLE (usb, minha_tabela_usb);
@@ -88,7 +122,7 @@ MODULE_DEVICE_TABLE (usb, minha_tabela_usb);
 // USB - Definição do driver USB
 static struct usb_driver meu_driver_usb =
 {
-    .name = "meu_driver_usb",
+    .name = "xbox",
     .probe = meu_driver_usb_probe,
     .disconnect = meu_driver_usb_disconnect,
     .id_table = minha_tabela_usb,
