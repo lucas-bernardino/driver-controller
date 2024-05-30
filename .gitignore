@@ -1,0 +1,14 @@
+modules.order
+.modules.order.cmd
+Module.symvers
+.Module.symvers.cmd
+Modulo Base.zip'
+modulo.ko
+.modulo.ko.cmd
+modulo.mod
+modulo.mod.c
+.modulo.mod.cmd
+modulo.mod.o
+.modulo.mod.o.cmd
+modulo.o
+.modulo.o.cmd
