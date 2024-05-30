@@ -5,52 +5,51 @@
 #include <linux/usb/input.h>
 #include <linux/hid.h>
 
-// Informações do Modulo
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Lucas Nesi <email@email.com>");
 MODULE_DESCRIPTION("Meu Modulo USB");
 
-// **********************************
-//   Interface com o subsistema USB
-// **********************************
+#define BUTTON_PRESSED 0x2C
 
-// Check what endpoints are not NULL
-void check_endpoints(struct usb_device* dev, struct usb_interface *interface) {
-    for (int i = 0; i < 16; i++) {
-      if (dev->ep_in[i]) {
-        printk(KERN_INFO "INTERRUPT STATE - dev->ep_in[%d]: %d", i, usb_endpoint_xfer_int(&dev->ep_in[i]->desc));
-        printk(KERN_INFO "IN STATE - dev->ep_in[%d]: %d", i, usb_endpoint_dir_in(&dev->ep_in[i]->desc));
-        // printk(KERN_INFO "ADDRESS - %04X", interface->cur_altsetting->endpoint[i].desc.bEndpointAddress);  
-    }
-    }
-    for (int i = 0; i < 16; i++) {
-      if (dev->ep_out[i]) {
-        printk(KERN_INFO "INTERRUPT STATE - dev->ep_out[%d]: %d", i, usb_endpoint_xfer_int(&dev->ep_out[i]->desc));
-        printk(KERN_INFO "IN STATE - dev->ep_out[%d]: %d", i, usb_endpoint_dir_in(&dev->ep_out[i]->desc));
-      }
-    }
-}
+#define X_BUTTON 0x40
+#define A_BUTTON 0x10
+#define B_BUTTON 0x20
+#define Y_BUTTON 0xFFFFFF80
 
 static struct usb_controller {
   struct usb_device *usb_dev;
   int pipe;
   dma_addr_t input_dma_addr;
-  dma_addr_t output_dma_addr;
   char *buffer;
   struct urb *my_urb;
-  struct urb *irq_out;
-  struct usb_anchor irq_out_anchor;
-  char* output_data;
 };
+
+static void get_button_pressed(char* data) {
+  switch (data[3]) {
+    case BUTTON_PRESSED:
+      switch (data[4]) {
+        case X_BUTTON:
+          printk(KERN_INFO "X BUTTON PRESSED\n");
+          break;
+        case A_BUTTON:
+          printk(KERN_INFO "A BUTTON PRESSED\n");
+          break;      
+        case B_BUTTON:
+          printk(KERN_INFO "B BUTTON PRESSED\n");
+          break;
+        case Y_BUTTON:
+          printk(KERN_INFO "Y BUTTON PRESSED\n");
+          break;
+        default:
+          printk(KERN_INFO "I DONT KNOW WHAT KEY YOU PRESSED YET.\n");
+      }
+  }
+}
 
 static void read_callback(struct urb *urb) {
 
-  printk(KERN_INFO "Within callback");
-
   struct usb_controller *controller = urb->context;
   char* data = controller->buffer;
-
-  printk(KERN_ALERT "URB STATUS: %d\n", urb->status);
 
   printk(KERN_ALERT "data[0]=%X\n", data[0]);
 	printk(KERN_ALERT "data[1]=%X\n", data[1]);
@@ -60,9 +59,10 @@ static void read_callback(struct urb *urb) {
 	printk(KERN_ALERT "data[5]=%X\n", data[5]);
 	printk(KERN_ALERT "data[6]=%X\n", data[6]);
 	printk(KERN_ALERT "data[7]=%X\n", data[7]);
-  
+
+  get_button_pressed(data);
+
   int submit_val = usb_submit_urb(urb, GFP_ATOMIC);
-  // printk(KERN_INFO "submit_val: %d", submit_val);
 
 }
 
@@ -82,12 +82,6 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
 	
     printk(KERN_INFO "meu_driver_usb: interface=%X numEndpoints=%X", interface->cur_altsetting->desc.bInterfaceNumber, numendpoints);
 
-    for (int i = 0; i < numendpoints; i++) {
-      printk(KERN_INFO "ED[%d]->bEndpointAddress: 0x%02X\n", i, interface->cur_altsetting->endpoint[i].desc.bEndpointAddress);
-      printk(KERN_INFO "ED[%d]->bmAttributes: 0x%02X\n", i, interface->cur_altsetting->endpoint[i].desc.bmAttributes);
-      printk(KERN_INFO "ED[%d]->wMaxPacketSize: 0x%04X\n", i, interface->cur_altsetting->endpoint[i].desc.wMaxPacketSize);
-    }
-
     struct usb_controller *controller = kzalloc(sizeof(struct usb_controller) , GFP_KERNEL);
     if (!controller) {
       printk(KERN_WARNING "ERROR: Could not alloc controller.");
@@ -102,29 +96,24 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
 
     controller->usb_dev = dev;
     
-    struct usb_endpoint_descriptor *ep_irq_in, *ep_irq_out;
+    struct usb_endpoint_descriptor *ep_irq_in;
     ep_irq_in = NULL;
-    ep_irq_out = NULL;
 
     for (int i = 0; i < 2; i++) {
       struct usb_endpoint_descriptor *ep = &interface->cur_altsetting->endpoint[i].desc;
       if (usb_endpoint_xfer_int(ep)) {
         if (usb_endpoint_dir_in(ep))
           ep_irq_in = ep;
-        else
-          ep_irq_out = ep;
       }
     }
 
-    if (!ep_irq_in || !ep_irq_out) {
-      printk(KERN_INFO "Muita treta\n");
+    if (!ep_irq_in) {
+      printk(KERN_WARNING "ERROR: Could not find interruption and in direction");
       return retval;
     }
 
     controller->pipe = usb_rcvintpipe(dev, ep_irq_in->bEndpointAddress);
     controller->buffer = usb_alloc_coherent(dev, 64, GFP_KERNEL, &controller->input_dma_addr);
-  
-    // init_output(interface, controller, ep_irq_out);
 
     usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, ep_irq_in->bEndpointAddress);
  
