@@ -11,9 +11,9 @@ MODULE_DESCRIPTION("Meu Modulo USB");
 
 #define BUTTON_PRESSED 0x2C
 
-#define X_BUTTON 0x40
 #define A_BUTTON 0x10
 #define B_BUTTON 0x20
+#define X_BUTTON 0x40
 #define Y_BUTTON 0x80
 
 #define RB_BUTTON 0x20
@@ -27,39 +27,40 @@ static struct usb_controller {
   struct urb *my_urb;
 };
 
-static void get_button_pressed(const char* data) {
-  switch (data[3]) {
-    case BUTTON_PRESSED:
-      switch ((unsigned char) data[4]) {
-        case X_BUTTON:
-          printk(KERN_INFO "X BUTTON PRESSED\n");
-          break;
-        case A_BUTTON:
-          printk(KERN_INFO "A BUTTON PRESSED\n");
-          break;      
-        case B_BUTTON:
-          printk(KERN_INFO "B BUTTON PRESSED\n");
-          break;
-        case Y_BUTTON:
-          printk(KERN_INFO "Y BUTTON PRESSED\n");
-          break;
-      }
+static void get_button_pressed(const unsigned char* data) {
+  if (data[3] == BUTTON_PRESSED) {
+    unsigned char colored_buttons = data[4];
+    if ((colored_buttons &  A_BUTTON) > 1)
+      printk(KERN_INFO "BUTTON (A) pressed\n");
+    if ((colored_buttons & B_BUTTON) > 1)
+      printk(KERN_INFO "BUTTON (B) pressed\n");
+    if ((colored_buttons & X_BUTTON) > 1)
+      printk(KERN_INFO "BUTTON (X) pressed\n");
+    if ((colored_buttons & Y_BUTTON) > 1)
+      printk(KERN_INFO "BUTTON (Y) pressed\n");
+
+    unsigned char top_buttons = data[5];
+    printk(KERN_INFO "Operacao: %x", (top_buttons & LB_BUTTON) > 1);
+    if ((top_buttons & RB_BUTTON) > 1)
+      printk(KERN_INFO "BUTTON (RB) pressed");
+    if ((top_buttons & LB_BUTTON) > 1)
+      printk(KERN_INFO "BUTTON (LB) pressed");
   }
 }
 
 static void read_callback(struct urb *urb) {
 
   struct usb_controller *controller = urb->context;
-  char* data = controller->buffer;
+  unsigned char* data = controller->buffer;
 
   printk(KERN_ALERT "data[0]=%X\n", data[0]);
 	printk(KERN_ALERT "data[1]=%X\n", data[1]);
 	printk(KERN_ALERT "data[2]=%X\n", data[2]);
 	printk(KERN_ALERT "data[3]=%X\n", data[3]);
-	printk(KERN_ALERT "data[4]=%x\n", (unsigned char) data[4]);
+	printk(KERN_ALERT "data[4]=%X\n", data[4]);
 	printk(KERN_ALERT "data[5]=%X\n", data[5]);
 	printk(KERN_ALERT "data[6]=%X\n", data[6]);
-	printk(KERN_ALERT "data[7]=%X\n", data[7]);
+	printk(KERN_ALERT "data[7]=%X\n\n", data[7]);
 
   get_button_pressed(data);
 
