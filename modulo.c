@@ -38,33 +38,10 @@ static struct usb_controller {
   dma_addr_t output_dma_addr;
   char *buffer;
   struct urb *my_urb;
-  struct urb *irq_out
+  struct urb *irq_out;
   struct usb_anchor irq_out_anchor;
   char* output_data;
 };
-
-static void init_output(struct usb_interface *interface, struct usb_controller *controller, struct usb_endpoint_descriptor *ep_irq_out) {
-  
-  init_usb_anchor(&controller->irq_out_anchor);
-
-  controller->output_data = usb_alloc_coherent(controller->usb_device, 64, GFP_KERNEL, controller->output_dma_addr);
-
-  if (!controller->output_data) {
-    printk(KERN_WARNING "ERROR: Could not usb_alloc_coherent.");
-    return;
-  }
-  
-  controller->irq_out = usb_alloc_urb(0, GFP_KERNEK);
-  if (!controller->irq_out) {
-    printk(KERN_WARNING "ERROR:Could not usb_alloc_urb");
-    return;
-  }
-
-  usb_fill_int_urb(controller->irq_out, controller->usb_dev, usb_sndintpipe(controller->usb_dev, ep_irq_out->bEndpointAddress), controller->output_data, 64, output_callback, controller, ep_irq_out->bInterval);
-
-  controller->irq_out->transfer_dma = controller->output_dma_addr;
-
-}
 
 static void read_callback(struct urb *urb) {
 
@@ -73,19 +50,19 @@ static void read_callback(struct urb *urb) {
   struct usb_controller *controller = urb->context;
   char* data = controller->buffer;
 
-  printk(KERN_ALERT "URB STATUS: %d", urb->status);
+  printk(KERN_ALERT "URB STATUS: %d\n", urb->status);
 
-  printk(KERN_ALERT "data[0]=%d\n", data[0]);
-	printk(KERN_ALERT "data[1]=%d\n", data[1]);
-	printk(KERN_ALERT "data[2]=%d\n", data[2]);
-	printk(KERN_ALERT "data[3]=%d\n", data[3]);
-	printk(KERN_ALERT "data[4]=%d\n", data[4]);
-	printk(KERN_ALERT "data[5]=%d\n", data[5]);
-	printk(KERN_ALERT "data[6]=%d\n", data[6]);
-	printk(KERN_ALERT "data[7]=%d\n", data[7]);
+  printk(KERN_ALERT "data[0]=%X\n", data[0]);
+	printk(KERN_ALERT "data[1]=%X\n", data[1]);
+	printk(KERN_ALERT "data[2]=%X\n", data[2]);
+	printk(KERN_ALERT "data[3]=%X\n", data[3]);
+	printk(KERN_ALERT "data[4]=%X\n", data[4]);
+	printk(KERN_ALERT "data[5]=%X\n", data[5]);
+	printk(KERN_ALERT "data[6]=%X\n", data[6]);
+	printk(KERN_ALERT "data[7]=%X\n", data[7]);
   
   int submit_val = usb_submit_urb(urb, GFP_ATOMIC);
-  printk(KERN_INFO "submit_val: %d", submit_val);
+  // printk(KERN_INFO "submit_val: %d", submit_val);
 
 }
 
@@ -111,8 +88,6 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
       printk(KERN_INFO "ED[%d]->wMaxPacketSize: 0x%04X\n", i, interface->cur_altsetting->endpoint[i].desc.wMaxPacketSize);
     }
 
-    check_endpoints(dev, interface);
-    
     struct usb_controller *controller = kzalloc(sizeof(struct usb_controller) , GFP_KERNEL);
     if (!controller) {
       printk(KERN_WARNING "ERROR: Could not alloc controller.");
@@ -125,7 +100,7 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
       return retval;
     }
 
-    controller->usb_device = dev;
+    controller->usb_dev = dev;
     
     struct usb_endpoint_descriptor *ep_irq_in, *ep_irq_out;
     ep_irq_in = NULL;
@@ -149,15 +124,14 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     controller->pipe = usb_rcvintpipe(dev, ep_irq_in->bEndpointAddress);
     controller->buffer = usb_alloc_coherent(dev, 64, GFP_KERNEL, &controller->input_dma_addr);
   
-    init_output(interface, controller, ep_irq_out);
+    // init_output(interface, controller, ep_irq_out);
 
-    printk(KERN_INFO "usb_fill_int_urb init\n");
     usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, ep_irq_in->bEndpointAddress);
  
-    printk(KERN_INFO "usb_set_infdata init\n");
     usb_set_intfdata(interface, controller);
-  
-    printk(KERN_INFO "probe end");
+ 
+    int submit_val = usb_submit_urb(controller->my_urb, GFP_ATOMIC);
+
     return retval;
 }
 
