@@ -19,6 +19,11 @@ MODULE_DESCRIPTION("Meu Modulo USB");
 #define RB_BUTTON 0x20
 #define LB_BUTTON 0x10
 
+#define UP_BUTTON 0x1 
+#define BOTTOM_BUTTON 0x2 
+#define LEFT_BUTTON 0x4
+#define RIGHT_BUTTON 0x8
+
 static struct usb_controller {
   struct usb_device *usb_dev;
   int pipe;
@@ -39,12 +44,19 @@ static void get_button_pressed(const unsigned char* data) {
     if ((colored_buttons & Y_BUTTON) > 1)
       printk(KERN_INFO "BUTTON (Y) pressed\n");
 
-    unsigned char top_buttons = data[5];
-    printk(KERN_INFO "Operacao: %x", (top_buttons & LB_BUTTON) > 1);
-    if ((top_buttons & RB_BUTTON) > 1)
+    unsigned char aux_buttons = data[5];
+    if ((aux_buttons & RB_BUTTON) > 1)
       printk(KERN_INFO "BUTTON (RB) pressed");
-    if ((top_buttons & LB_BUTTON) > 1)
+    if ((aux_buttons & LB_BUTTON) > 1)
       printk(KERN_INFO "BUTTON (LB) pressed");
+    if ((aux_buttons & UP_BUTTON) > 1)
+      printk(KERN_INFO "BUTTON (UP) pressed");
+    if ((aux_buttons & BOTTOM_BUTTON) > 1)
+      printk(KERN_INFO "BUTTON (BOTTOM) pressed");
+    if ((aux_buttons & LEFT_BUTTON) > 1)
+      printk(KERN_INFO "BUTTON (LEFT) pressed");
+    if ((aux_buttons & RIGHT_BUTTON) > 1)
+      printk(KERN_INFO "BUTTON (RIGHT) pressed");
   }
 }
 
@@ -53,7 +65,7 @@ static void read_callback(struct urb *urb) {
   struct usb_controller *controller = urb->context;
   unsigned char* data = controller->buffer;
 
-  printk(KERN_ALERT "data[0]=%X\n", data[0]);
+	printk(KERN_ALERT "data[0]=%X\n", data[0]);
 	printk(KERN_ALERT "data[1]=%X\n", data[1]);
 	printk(KERN_ALERT "data[2]=%X\n", data[2]);
 	printk(KERN_ALERT "data[3]=%X\n", data[3]);
