@@ -90,17 +90,18 @@ static int usb_controller_open(struct input_dev *i_dev) {
 	return 1;
    }
 
-   printk(KERN_ALERT "OPENING USB_CONTROLLER_OPEN\n");
+   printk(KERN_ALERT "OPENING USB_CONTROLLER\n");
+
+   if (!controller->my_urb) {
+	printk(KERN_WARNING "Opps.. controller->my_urb is NULL\n");
+	return 1;
+   }
 
    if (usb_submit_urb(controller->my_urb, GFP_KERNEL)) {
 	printk(KERN_WARNING "ERROR: Could not usb_submit_urb\n");
 	return 1;
    }
 
-   if (!controller->my_urb) {
-	printk(KERN_WARNING "Opps.. controller->my_urb is NULL\n");
-	return 1;
-   }
    if (!controller->usb_dev) {
 	printk(KERN_WARNING "Opps.. controller->usb_dev is NULL\n");
 	return 1;
@@ -109,6 +110,26 @@ static int usb_controller_open(struct input_dev *i_dev) {
    controller->my_urb->dev = controller->usb_dev;
 
    return 0;
+
+}
+
+static void usb_controller_close(struct input_dev *i_dev) {
+
+   struct usb_controller *controller = input_get_drvdata(i_dev);
+
+   if (!controller) {
+	printk(KERN_WARNING "ERROR: Could not input_get_drvdata\n");
+	return;
+   }
+
+   if (!controller->my_urb) {
+	printk(KERN_WARNING "Opps.. controller->my_urb is NULL\n");
+	return;
+   }
+
+   printk(KERN_ALERT "CLOSING USB_CONTROLLER\n");
+
+   usb_kill_urb(controller->my_urb);
 
 }
 
@@ -179,6 +200,14 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     input_set_drvdata(i_dev, controller);
 
     i_dev->open = usb_controller_open;
+    i_dev->close = usb_controller_close;
+    
+    int err = input_register_device(controller->i_dev);
+    printk(KERN_INFO "Value from err: %d\n", err);
+    if (err) {
+	printk(KERN_WARNING "ERROR: Could not input_register_device\n");
+	return 1;
+    }
 
     return retval;
 }
