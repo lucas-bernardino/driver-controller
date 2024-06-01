@@ -79,6 +79,8 @@ static void read_callback(struct urb *urb) {
 
   int submit_val = usb_submit_urb(urb, GFP_ATOMIC);
 
+  printk(KERN_INFO "Submit_urb value na read_callback: %d\n", submit_val);
+
 }
 
 static int usb_controller_open(struct input_dev *i_dev) {
@@ -97,21 +99,23 @@ static int usb_controller_open(struct input_dev *i_dev) {
 	return 1;
    }
 
-   int status = usb_submit_urb(controller->my_urb, GFP_ATOMIC);
-
-   printk(KERN_INFO "STATUS OF USB_SUBMIT_URB\n");
-
-   if (status) {
-	printk(KERN_WARNING "ERROR: Could not usb_submit_urb\n");
-	return 1;
-   }
-
    if (!controller->usb_dev) {
 	printk(KERN_WARNING "Opps.. controller->usb_dev is NULL\n");
 	return 1;
    }
 
    controller->my_urb->dev = controller->usb_dev;
+
+   int status = usb_submit_urb(controller->my_urb, GFP_KERNEL);
+
+   printk(KERN_INFO "STATUS OF USB_SUBMIT_URB: %d\n", status);
+
+   if (status) {
+	printk(KERN_WARNING "ERROR: Could not usb_submit_urb\n");
+	return 1;
+   }
+
+
 
    return 0;
 
@@ -183,15 +187,6 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
       return retval;
     }
 
-    controller->pipe = usb_rcvintpipe(dev, ep_irq_in->bEndpointAddress);
-    controller->buffer = usb_alloc_coherent(dev, 64, GFP_KERNEL, &controller->input_dma_addr);
-
-    usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, ep_irq_in->bEndpointAddress);
- 
-    usb_set_intfdata(interface, controller);
- 
-    int submit_val = usb_submit_urb(controller->my_urb, GFP_ATOMIC);
-
     struct input_dev *i_dev = input_allocate_device();
     if(!i_dev) {
 	printk(KERN_WARNING "ERROR: Could not input_allocate_device\n");
@@ -199,19 +194,29 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     }
     controller->i_dev = i_dev;
 
-    usb_to_input_id(dev, &i_dev->id);
+    usb_to_input_id(controller->usb_dev, &i_dev->id);
     i_dev->dev.parent = &interface->dev;
     input_set_drvdata(i_dev, controller);
 
     i_dev->open = usb_controller_open;
     i_dev->close = usb_controller_close;
-    
+
+
+    controller->pipe = usb_rcvintpipe(dev, ep_irq_in->bEndpointAddress);
+    controller->buffer = usb_alloc_coherent(dev, 64, GFP_KERNEL, &controller->input_dma_addr);
+    usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, ep_irq_in->bEndpointAddress);
+ 
+
+    //int submit_val = usb_submit_urb(controller->my_urb, GFP_ATOMIC);
+   
     int err = input_register_device(controller->i_dev);
     printk(KERN_INFO "Value from err: %d\n", err);
     if (err) {
 	printk(KERN_WARNING "ERROR: Could not input_register_device\n");
 	return 1;
     }
+
+    usb_set_intfdata(interface, controller);
 
     return retval;
 }
