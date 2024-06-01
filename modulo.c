@@ -97,7 +97,11 @@ static int usb_controller_open(struct input_dev *i_dev) {
 	return 1;
    }
 
-   if (usb_submit_urb(controller->my_urb, GFP_KERNEL)) {
+   int status = usb_submit_urb(controller->my_urb, GFP_ATOMIC);
+
+   printk(KERN_INFO "STATUS OF USB_SUBMIT_URB\n");
+
+   if (status) {
 	printk(KERN_WARNING "ERROR: Could not usb_submit_urb\n");
 	return 1;
    }
