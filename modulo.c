@@ -30,6 +30,7 @@ static struct usb_controller {
   dma_addr_t input_dma_addr;
   unsigned char *buffer;
   struct urb *my_urb;
+  struct input_dev *i_dev;
 };
 
 static void get_button_pressed(const unsigned char* data) {
@@ -134,6 +135,17 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     usb_set_intfdata(interface, controller);
  
     int submit_val = usb_submit_urb(controller->my_urb, GFP_ATOMIC);
+
+    struct input_dev *i_dev = input_allocate_device();
+    if(!i_dev) {
+	pritnk(KERN_WARNING "ERROR: Could not input_allocate_device");
+	return retval;
+    }
+    controller->i_dev = i_dev;
+
+    usb_to_input_id(i_dev, &i_dev->id);
+    i_dev->dev.parent = &interface->dev;
+    input_set_drvdata(i_dev, controller);
 
     return retval;
 }
