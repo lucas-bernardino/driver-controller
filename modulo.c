@@ -47,17 +47,17 @@ static void get_button_pressed(const unsigned char* data) {
 
     unsigned char aux_buttons = data[5];
     if ((aux_buttons & RB_BUTTON) > 1)
-      printk(KERN_INFO "BUTTON (RB) pressed");
+      printk(KERN_INFO "BUTTON (RB) pressed\n");
     if ((aux_buttons & LB_BUTTON) > 1)
-      printk(KERN_INFO "BUTTON (LB) pressed");
+      printk(KERN_INFO "BUTTON (LB) pressed\n");
     if ((aux_buttons & UP_BUTTON) > 1)
-      printk(KERN_INFO "BUTTON (UP) pressed");
+      printk(KERN_INFO "BUTTON (UP) pressed\n");
     if ((aux_buttons & BOTTOM_BUTTON) > 1)
-      printk(KERN_INFO "BUTTON (BOTTOM) pressed");
+      printk(KERN_INFO "BUTTON (BOTTOM) pressed\n");
     if ((aux_buttons & LEFT_BUTTON) > 1)
-      printk(KERN_INFO "BUTTON (LEFT) pressed");
+      printk(KERN_INFO "BUTTON (LEFT) pressed\n");
     if ((aux_buttons & RIGHT_BUTTON) > 1)
-      printk(KERN_INFO "BUTTON (RIGHT) pressed");
+      printk(KERN_INFO "BUTTON (RIGHT) pressed\n");
   }
 }
 
@@ -66,18 +66,49 @@ static void read_callback(struct urb *urb) {
   struct usb_controller *controller = urb->context;
   unsigned char* data = controller->buffer;
 
-	printk(KERN_ALERT "data[0]=%X\n", data[0]);
-	printk(KERN_ALERT "data[1]=%X\n", data[1]);
-	printk(KERN_ALERT "data[2]=%X\n", data[2]);
-	printk(KERN_ALERT "data[3]=%X\n", data[3]);
-	printk(KERN_ALERT "data[4]=%X\n", data[4]);
-	printk(KERN_ALERT "data[5]=%X\n", data[5]);
-	printk(KERN_ALERT "data[6]=%X\n", data[6]);
-	printk(KERN_ALERT "data[7]=%X\n\n", data[7]);
+	printk(KERN_INFO "data[0]=%X\n", data[0]);
+	printk(KERN_INFO "data[1]=%X\n", data[1]);
+	printk(KERN_INFO "data[2]=%X\n", data[2]);
+	printk(KERN_INFO "data[3]=%X\n", data[3]);
+	printk(KERN_INFO "data[4]=%X\n", data[4]);
+	printk(KERN_INFO "data[5]=%X\n", data[5]);
+	printk(KERN_INFO "data[6]=%X\n", data[6]);
+	printk(KERN_INFO "data[7]=%X\n\n", data[7]);
 
   get_button_pressed(data);
 
   int submit_val = usb_submit_urb(urb, GFP_ATOMIC);
+
+}
+
+static int usb_controller_open(struct input_dev *i_dev) {
+
+   struct usb_controller *controller = input_get_drvdata(i_dev);
+
+   if (!controller) {
+	printk(KERN_WARNING "ERROR: Could not input_get_drvdata\n");
+	return 1;
+   }
+
+   printk(KERN_ALERT "OPENING USB_CONTROLLER_OPEN\n");
+
+   if (usb_submit_urb(controller->my_urb, GFP_KERNEL)) {
+	printk(KERN_WARNING "ERROR: Could not usb_submit_urb\n");
+	return 1;
+   }
+
+   if (!controller->my_urb) {
+	printk(KERN_WARNING "Opps.. controller->my_urb is NULL\n");
+	return 1;
+   }
+   if (!controller->usb_dev) {
+	printk(KERN_WARNING "Opps.. controller->usb_dev is NULL\n");
+	return 1;
+   }
+
+   controller->my_urb->dev = controller->usb_dev;
+
+   return 0;
 
 }
 
@@ -99,13 +130,13 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
 
     struct usb_controller *controller = kzalloc(sizeof(struct usb_controller) , GFP_KERNEL);
     if (!controller) {
-      printk(KERN_WARNING "ERROR: Could not alloc controller.");
+      printk(KERN_WARNING "ERROR: Could not alloc controller.\n");
       return retval;
     }
 
     controller->my_urb = usb_alloc_urb(0, GFP_KERNEL);
     if (!controller->my_urb) {
-      printk(KERN_WARNING "ERROR: Could not alloc urb.");
+      printk(KERN_WARNING "ERROR: Could not alloc urb.\n");
       return retval;
     }
 
@@ -123,7 +154,7 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     }
 
     if (!ep_irq_in) {
-      printk(KERN_WARNING "ERROR: Could not find interruption and in direction");
+      printk(KERN_WARNING "ERROR: Could not find interruption and in direction\n");
       return retval;
     }
 
@@ -138,14 +169,16 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
 
     struct input_dev *i_dev = input_allocate_device();
     if(!i_dev) {
-	pritnk(KERN_WARNING "ERROR: Could not input_allocate_device");
+	printk(KERN_WARNING "ERROR: Could not input_allocate_device\n");
 	return retval;
     }
     controller->i_dev = i_dev;
 
-    usb_to_input_id(i_dev, &i_dev->id);
+    usb_to_input_id(dev, &i_dev->id);
     i_dev->dev.parent = &interface->dev;
     input_set_drvdata(i_dev, controller);
+
+    i_dev->open = usb_controller_open;
 
     return retval;
 }
