@@ -66,20 +66,27 @@ static void read_callback(struct urb *urb) {
   struct usb_controller *controller = urb->context;
   unsigned char* data = controller->buffer;
 
-	printk(KERN_INFO "data[0]=%X\n", data[0]);
-	printk(KERN_INFO "data[1]=%X\n", data[1]);
-	printk(KERN_INFO "data[2]=%X\n", data[2]);
-	printk(KERN_INFO "data[3]=%X\n", data[3]);
-	printk(KERN_INFO "data[4]=%X\n", data[4]);
-	printk(KERN_INFO "data[5]=%X\n", data[5]);
-	printk(KERN_INFO "data[6]=%X\n", data[6]);
-	printk(KERN_INFO "data[7]=%X\n\n", data[7]);
+  /*
+  printk(KERN_INFO "data[0]=%X\n", data[0]);
+  printk(KERN_INFO "data[1]=%X\n", data[1]);
+  printk(KERN_INFO "data[2]=%X\n", data[2]);
+  printk(KERN_INFO "data[3]=%X\n", data[3]);
+  printk(KERN_INFO "data[4]=%X\n", data[4]);
+  printk(KERN_INFO "data[5]=%X\n", data[5]);
+  printk(KERN_INFO "data[6]=%X\n", data[6]);
+  printk(KERN_INFO "data[7]=%X\n\n", data[7]);
+  */
 
   get_button_pressed(data);
 
-  int submit_val = usb_submit_urb(urb, GFP_ATOMIC);
+  if (!controller->i_dev) {
+	  printk(KERN_WARNING "controller->i_dev is null in read_callback\n");
+	  return;
+  }
 
-  printk(KERN_INFO "Submit_urb value na read_callback: %d\n", submit_val);
+  input_report_key(controller->i_dev, KEY_A, A_BUTTON);
+
+  int submit_val = usb_submit_urb(urb, GFP_ATOMIC);
 
 }
 
@@ -108,14 +115,10 @@ static int usb_controller_open(struct input_dev *i_dev) {
 
    int status = usb_submit_urb(controller->my_urb, GFP_KERNEL);
 
-   printk(KERN_INFO "STATUS OF USB_SUBMIT_URB: %d\n", status);
-
    if (status) {
 	printk(KERN_WARNING "ERROR: Could not usb_submit_urb\n");
 	return 1;
    }
-
-
 
    return 0;
 
@@ -207,8 +210,9 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, ep_irq_in->bEndpointAddress);
  
 
-    //int submit_val = usb_submit_urb(controller->my_urb, GFP_ATOMIC);
-   
+    input_set_capability(controller->i_dev, EV_KEY, KEY_A);
+
+
     int err = input_register_device(controller->i_dev);
     printk(KERN_INFO "Value from err: %d\n", err);
     if (err) {
