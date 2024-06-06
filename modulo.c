@@ -31,6 +31,7 @@ static struct usb_controller {
   unsigned char *buffer;
   struct urb *my_urb;
   struct input_dev *i_dev;
+  char *name;
 };
 
 static void get_button_pressed(const unsigned char* data) {
@@ -85,10 +86,10 @@ static void read_callback(struct urb *urb) {
   if (data[3] == BUTTON_PRESSED) {
     unsigned char colored_buttons = data[4];
     if ((colored_buttons &  A_BUTTON) > 1) {
-      input_report_key(controller->i_dev, KEY_S, 1);
+      input_report_key(controller->i_dev, KEY_A, 1);
       printk(KERN_INFO "Chamei o report_key 1\n");
     } else {
-      input_report_key(controller->i_dev, KEY_S, 0);
+      input_report_key(controller->i_dev, KEY_A, 0);
       printk(KERN_INFO "Chamei o report_key 0\n");
     }
     input_sync(controller->i_dev);
@@ -180,6 +181,7 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
       return retval;
     }
 
+    controller->name = "Xbox Series S Controller";
     controller->usb_dev = dev;
     
     struct usb_endpoint_descriptor *ep_irq_in;
@@ -200,13 +202,14 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
 
     struct input_dev *i_dev = input_allocate_device();
     if(!i_dev) {
-    printk(KERN_WARNING "ERROR: Could not input_allocate_device\n");
-    return retval;
+      printk(KERN_WARNING "ERROR: Could not input_allocate_device\n");
+      return retval;
     }
     controller->i_dev = i_dev;
 
     usb_to_input_id(controller->usb_dev, &i_dev->id);
     i_dev->dev.parent = &interface->dev;
+    controller->i_dev->name = controller->name;
     input_set_drvdata(i_dev, controller);
 
     i_dev->open = usb_controller_open;
@@ -218,7 +221,7 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, ep_irq_in->bEndpointAddress);
  
 
-    input_set_capability(controller->i_dev, EV_KEY, KEY_S);
+    input_set_capability(controller->i_dev, EV_KEY, KEY_A);
 
     int err = input_register_device(controller->i_dev);
     printk(KERN_INFO "Value from err: %d\n", err);
