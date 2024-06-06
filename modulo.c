@@ -66,16 +66,14 @@ static void read_callback(struct urb *urb) {
   struct usb_controller *controller = urb->context;
   unsigned char* data = controller->buffer;
 
-  /*
-  printk(KERN_INFO "data[0]=%X\n", data[0]);
-  printk(KERN_INFO "data[1]=%X\n", data[1]);
-  printk(KERN_INFO "data[2]=%X\n", data[2]);
-  printk(KERN_INFO "data[3]=%X\n", data[3]);
-  printk(KERN_INFO "data[4]=%X\n", data[4]);
-  printk(KERN_INFO "data[5]=%X\n", data[5]);
-  printk(KERN_INFO "data[6]=%X\n", data[6]);
-  printk(KERN_INFO "data[7]=%X\n\n", data[7]);
-  */
+  // printk(KERN_INFO "data[0]=%X\n", data[0]);
+  // printk(KERN_INFO "data[1]=%X\n", data[1]);
+  // printk(KERN_INFO "data[2]=%X\n", data[2]);
+  // printk(KERN_INFO "data[3]=%X\n", data[3]);
+  // printk(KERN_INFO "data[4]=%X\n", data[4]);
+  // printk(KERN_INFO "data[5]=%X\n", data[5]);
+  // printk(KERN_INFO "data[6]=%X\n", data[6]);
+  // printk(KERN_INFO "data[7]=%X\n\n", data[7]);
 
   get_button_pressed(data);
 
@@ -84,10 +82,20 @@ static void read_callback(struct urb *urb) {
 	  return;
   }
 
-  input_report_key(controller->i_dev, KEY_A, A_BUTTON);
+  if (data[3] == BUTTON_PRESSED) {
+    unsigned char colored_buttons = data[4];
+    if ((colored_buttons &  A_BUTTON) > 1) {
+      input_report_key(controller->i_dev, KEY_S, 1);
+      printk(KERN_INFO "Chamei o report_key 1\n");
+    } else {
+      input_report_key(controller->i_dev, KEY_S, 0);
+      printk(KERN_INFO "Chamei o report_key 0\n");
+    }
+    input_sync(controller->i_dev);
+    printk(KERN_INFO "Chamei o report_key fora dos ifs\n");
+  }
 
   int submit_val = usb_submit_urb(urb, GFP_ATOMIC);
-
 }
 
 static int usb_controller_open(struct input_dev *i_dev) {
@@ -192,8 +200,8 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
 
     struct input_dev *i_dev = input_allocate_device();
     if(!i_dev) {
-	printk(KERN_WARNING "ERROR: Could not input_allocate_device\n");
-	return retval;
+    printk(KERN_WARNING "ERROR: Could not input_allocate_device\n");
+    return retval;
     }
     controller->i_dev = i_dev;
 
@@ -210,14 +218,13 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
     usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, ep_irq_in->bEndpointAddress);
  
 
-    input_set_capability(controller->i_dev, EV_KEY, KEY_A);
-
+    input_set_capability(controller->i_dev, EV_KEY, KEY_S);
 
     int err = input_register_device(controller->i_dev);
     printk(KERN_INFO "Value from err: %d\n", err);
     if (err) {
-	printk(KERN_WARNING "ERROR: Could not input_register_device\n");
-	return 1;
+      printk(KERN_WARNING "ERROR: Could not input_register_device\n");
+      return 1;
     }
 
     usb_set_intfdata(interface, controller);
