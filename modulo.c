@@ -35,44 +35,21 @@ static struct usb_controller {
 };
 
 static void handle_button_pressed(const unsigned char* data, struct usb_controller * controller) {
-  if (data[3] == BUTTON_PRESSED) {
+  if(data[3]  == BUTTON_PRESSED){
     unsigned char colored_buttons = data[4];
-    if ((colored_buttons &  A_BUTTON) > 1)
-      input_report_key(controller->i_dev, KEY_A, 1);
-    if ((colored_buttons & B_BUTTON) > 1)
-      input_report_key(controller->i_dev, KEY_B, 1);
-    if ((colored_buttons & X_BUTTON) > 1)
-      input_report_key(controller->i_dev, KEY_X, 1);
-    if ((colored_buttons & Y_BUTTON) > 1)
-      input_report_key(controller->i_dev, KEY_Y, 1);
-
     unsigned char aux_buttons = data[5];
-    if ((aux_buttons & RB_BUTTON) > 1)
-      input_report_key(controller->i_dev, KEY_N, 1);
-    if ((aux_buttons & LB_BUTTON) > 1)
-      input_report_key(controller->i_dev, KEY_M, 1);
-    if ((aux_buttons & UP_BUTTON) > 0)
-      printk(KERN_INFO "cheguei no up");
-      input_report_key(controller->i_dev, KEY_U, 1);
-    if ((aux_buttons & BOTTOM_BUTTON) > 1)
-      input_report_key(controller->i_dev, KEY_D, 1);
-    if ((aux_buttons & LEFT_BUTTON) > 1)
-      input_report_key(controller->i_dev, KEY_L, 1);
-    if ((aux_buttons & RIGHT_BUTTON) > 1)
-      input_report_key(controller->i_dev, KEY_R, 1);
-  
-    input_report_key(controller->i_dev, KEY_A, 0);
-    input_report_key(controller->i_dev, KEY_B, 0);
-    input_report_key(controller->i_dev, KEY_X, 0);
-    input_report_key(controller->i_dev, KEY_Y, 0);
-    input_report_key(controller->i_dev, KEY_N, 0);
-    input_report_key(controller->i_dev, KEY_M, 0);
-    input_report_key(controller->i_dev, KEY_U, 0);
-    input_report_key(controller->i_dev, KEY_D, 0);
-    input_report_key(controller->i_dev, KEY_L, 0);
-    input_report_key(controller->i_dev, KEY_R, 0);
-    input_sync(controller->i_dev);
+    input_report_key(controller->i_dev, KEY_A, colored_buttons & A_BUTTON);
+    input_report_key(controller->i_dev, KEY_B, colored_buttons & B_BUTTON);
+    input_report_key(controller->i_dev, KEY_X, colored_buttons & X_BUTTON);
+    input_report_key(controller->i_dev, KEY_Y, colored_buttons & Y_BUTTON);
+    input_report_key(controller->i_dev, KEY_N, aux_buttons & RB_BUTTON);
+    input_report_key(controller->i_dev, KEY_M, aux_buttons & LB_BUTTON);
+    input_report_key(controller->i_dev, KEY_U, aux_buttons & UP_BUTTON);
+    input_report_key(controller->i_dev, KEY_D, aux_buttons & BOTTOM_BUTTON);
+    input_report_key(controller->i_dev, KEY_L, aux_buttons & LEFT_BUTTON);
+    input_report_key(controller->i_dev, KEY_R, aux_buttons & RIGHT_BUTTON);
   }
+  input_sync(controller->i_dev);
 }
 
 static void read_callback(struct urb *urb) {
@@ -88,26 +65,13 @@ static void read_callback(struct urb *urb) {
   // printk(KERN_INFO "data[5]=%X\n", data[5]);
   // printk(KERN_INFO "data[6]=%X\n", data[6]);
   // printk(KERN_INFO "data[7]=%X\n\n", data[7]);
-
+  //
   handle_button_pressed(data, controller);
 
   if (!controller->i_dev) {
 	  printk(KERN_WARNING "controller->i_dev is null in read_callback\n");
 	  return;
   }
-  //
-  // if (data[3] == BUTTON_PRESSED) {
-  //   unsigned char colored_buttons = data[4];
-  //   if ((colored_buttons &  A_BUTTON) > 1) {
-  //     input_report_key(controller->i_dev, KEY_A, 1);
-  //     printk(KERN_INFO "Chamei o report_key 1\n");
-  //   } else {
-  //     input_report_key(controller->i_dev, KEY_A, 0);
-  //     printk(KERN_INFO "Chamei o report_key 0\n");
-  //   }
-  //   input_sync(controller->i_dev);
-  //   printk(KERN_INFO "Chamei o report_key fora dos ifs\n");
-  // }
 
   int submit_val = usb_submit_urb(urb, GFP_ATOMIC);
 }
