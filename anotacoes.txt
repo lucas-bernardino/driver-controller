@@ -71,3 +71,18 @@ Ver pq isso nao funciona
  
  COlocar no relatorio que teve que usar o casting pra (unsigned char) pq o Y ao inves de aparecer como 0x80 estava aparecendo como 0xFFFFFF80. E isso iria custar
  muito tempo ate pensar em um jeito de ver quais teclas seriam apertadas juntas...
+
+INFORMACOES PARA FALAR:
+
+for (int i = 0; i < 2; i++) {
+  struct usb_endpoint_descriptor *ep = &interface->cur_altsetting->endpoint[i].desc;
+  if (usb_endpoint_xfer_int(ep)) {
+    if (usb_endpoint_dir_in(ep)) {
+      printk(KERN_INFO "controller_driver: Using [%x] as the bEndpointAddress", ep->bEndpointAddress);
+      ep_irq_in = ep;
+    }
+  }
+}
+
+
+

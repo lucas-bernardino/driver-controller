@@ -131,11 +131,11 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
   if (interface->cur_altsetting->desc.bNumEndpoints != 2)
     return -ENODEV;
 
-  printk(KERN_INFO "meu_driver_usb: O dispositivo idVendor=%X idProduct=%X foi connectado ao meu driver, interface=%X", id->idVendor, id->idProduct, interface->cur_altsetting->desc.bInterfaceNumber);
+  printk(KERN_INFO "controller_driver: O dispositivo idVendor=%X idProduct=%X foi connectado ao meu driver, interface=%X", id->idVendor, id->idProduct, interface->cur_altsetting->desc.bInterfaceNumber);
 
   int numendpoints = interface->cur_altsetting->desc.bNumEndpoints;
 
-  printk(KERN_INFO "meu_driver_usb: interface=%X numEndpoints=%X", interface->cur_altsetting->desc.bInterfaceNumber, numendpoints);
+  printk(KERN_INFO "controller_driver: interface=%X numEndpoints=%X", interface->cur_altsetting->desc.bInterfaceNumber, numendpoints);
 
   struct usb_controller *controller = kzalloc(sizeof(struct usb_controller) , GFP_KERNEL);
   if (!controller) {
@@ -158,8 +158,10 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
   for (int i = 0; i < 2; i++) {
     struct usb_endpoint_descriptor *ep = &interface->cur_altsetting->endpoint[i].desc;
     if (usb_endpoint_xfer_int(ep)) {
-      if (usb_endpoint_dir_in(ep))
+      if (usb_endpoint_dir_in(ep)) {
+        printk(KERN_INFO "controller_driver: Using [%x] as the bEndpointAddress", ep->bEndpointAddress);
         ep_irq_in = ep;
+      }
     }
   }
 
