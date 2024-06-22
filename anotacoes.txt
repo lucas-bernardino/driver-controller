@@ -85,4 +85,131 @@ for (int i = 0; i < 2; i++) {
 }
 
 
+OUTPUT DO USBVIEW:
 
+
+
+Controller
+Manufacturer: Microsoft
+Serial Number: 3039373031323033303935313131
+Speed: 12Mb/s (full)
+Bus:   1
+Address:   6
+USB Version:  2.00
+Device Class: ff(vend.)
+Device Subclass: 47
+Device Protocol: d0
+Maximum Default Endpoint Size: 64
+Number of Configurations: 1
+Vendor Id: 045e
+Product Id: 0b12
+Revision Number:  5.0b
+
+Config Number: 1
+	Number of Interfaces: 3
+	Attributes: a0
+	MaxPower Needed: 500mA
+
+	Interface Number: 0
+		Name: xpad
+		Alternate Number: 0
+		Class: ff(vend.) 
+		Sub Class: 47
+		Protocol: d0
+		Number of Endpoints: 2
+
+			Endpoint Address: 02
+			Direction: out
+			Attribute: 3
+			Type: Int.
+			Max Packet Size: 64
+			Interval: 4ms
+
+			Endpoint Address: 82
+			Direction: in
+			Attribute: 3
+			Type: Int.
+			Max Packet Size: 64
+			Interval: 4ms
+
+	Interface Number: 0
+		Name: xpad
+		Alternate Number: 1
+		Class: ff(vend.) 
+		Sub Class: 47
+		Protocol: d0
+		Number of Endpoints: 2
+
+			Endpoint Address: 02
+			Direction: out
+			Attribute: 3
+			Type: Int.
+			Max Packet Size: 64
+			Interval: 4ms
+
+			Endpoint Address: 82
+			Direction: in
+			Attribute: 3
+			Type: Int.
+			Max Packet Size: 64
+			Interval: 2ms
+
+	Interface Number: 1
+		Name: (none)
+		Alternate Number: 0
+		Class: ff(vend.) 
+		Sub Class: 47
+		Protocol: d0
+		Number of Endpoints: 0
+
+	Interface Number: 1
+		Name: (none)
+		Alternate Number: 1
+		Class: ff(vend.) 
+		Sub Class: 47
+		Protocol: d0
+		Number of Endpoints: 2
+
+			Endpoint Address: 03
+			Direction: out
+			Attribute: 1
+			Type: Isoc
+			Max Packet Size: 228
+			Interval: 1ms
+
+			Endpoint Address: 83
+			Direction: in
+			Attribute: 1
+			Type: Isoc
+			Max Packet Size: 64
+			Interval: 1ms
+
+	Interface Number: 2
+		Name: (none)
+		Alternate Number: 0
+		Class: ff(vend.) 
+		Sub Class: 47
+		Protocol: d0
+		Number of Endpoints: 0
+
+	Interface Number: 2
+		Name: (none)
+		Alternate Number: 1
+		Class: ff(vend.) 
+		Sub Class: 47
+		Protocol: d0
+		Number of Endpoints: 2
+
+			Endpoint Address: 04
+			Direction: out
+			Attribute: 2
+			Type: Bulk
+			Max Packet Size: 64
+			Interval: 0ms
+
+			Endpoint Address: 84
+			Direction: in
+			Attribute: 2
+			Type: Bulk
+			Max Packet Size: 64
+			Interval: 0ms
