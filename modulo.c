@@ -43,7 +43,7 @@ static void handle_button_pressed(const unsigned char* data, struct usb_controll
     input_report_key(controller->i_dev, KEY_V, colored_buttons & B_BUTTON);
     input_report_key(controller->i_dev, KEY_LEFTCTRL, colored_buttons & X_BUTTON);
     input_report_key(controller->i_dev, KEY_C, colored_buttons & X_BUTTON);
-    input_report_key(controller->i_dev, KEY_Y, colored_buttons & Y_BUTTON);
+    input_report_key(controller->i_dev, KEY_BACKSPACE, colored_buttons & Y_BUTTON);
     input_report_key(controller->i_dev, KEY_VOLUMEUP, aux_buttons & RB_BUTTON);
     input_report_key(controller->i_dev, KEY_VOLUMEDOWN, aux_buttons & LB_BUTTON);
     input_report_key(controller->i_dev, KEY_UP, aux_buttons & UP_BUTTON);
@@ -197,7 +197,7 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
   input_set_capability(controller->i_dev, EV_KEY, KEY_LEFTCTRL);
   input_set_capability(controller->i_dev, EV_KEY, KEY_V);
   input_set_capability(controller->i_dev, EV_KEY, KEY_C);
-  input_set_capability(controller->i_dev, EV_KEY, KEY_Y);
+  input_set_capability(controller->i_dev, EV_KEY, KEY_BACKSPACE);
   input_set_capability(controller->i_dev, EV_KEY, KEY_VOLUMEUP);
   input_set_capability(controller->i_dev, EV_KEY, KEY_VOLUMEDOWN);
   input_set_capability(controller->i_dev, EV_KEY, KEY_UP);
