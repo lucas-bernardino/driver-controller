@@ -44,10 +44,10 @@ static void handle_button_pressed(const unsigned char* data, struct usb_controll
     input_report_key(controller->i_dev, KEY_Y, colored_buttons & Y_BUTTON);
     input_report_key(controller->i_dev, KEY_N, aux_buttons & RB_BUTTON);
     input_report_key(controller->i_dev, KEY_M, aux_buttons & LB_BUTTON);
-    input_report_key(controller->i_dev, KEY_U, aux_buttons & UP_BUTTON);
-    input_report_key(controller->i_dev, KEY_D, aux_buttons & BOTTOM_BUTTON);
-    input_report_key(controller->i_dev, KEY_L, aux_buttons & LEFT_BUTTON);
-    input_report_key(controller->i_dev, KEY_R, aux_buttons & RIGHT_BUTTON);
+    input_report_key(controller->i_dev, KEY_UP, aux_buttons & UP_BUTTON);
+    input_report_key(controller->i_dev, KEY_DOWN, aux_buttons & BOTTOM_BUTTON);
+    input_report_key(controller->i_dev, KEY_LEFT, aux_buttons & LEFT_BUTTON);
+    input_report_key(controller->i_dev, KEY_RIGHT, aux_buttons & RIGHT_BUTTON);
   }
   input_sync(controller->i_dev);
 }
@@ -197,10 +197,10 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
   input_set_capability(controller->i_dev, EV_KEY, KEY_Y);
   input_set_capability(controller->i_dev, EV_KEY, KEY_N);
   input_set_capability(controller->i_dev, EV_KEY, KEY_M);
-  input_set_capability(controller->i_dev, EV_KEY, KEY_U);
-  input_set_capability(controller->i_dev, EV_KEY, KEY_D);
-  input_set_capability(controller->i_dev, EV_KEY, KEY_L);
-  input_set_capability(controller->i_dev, EV_KEY, KEY_R);
+  input_set_capability(controller->i_dev, EV_KEY, KEY_UP);
+  input_set_capability(controller->i_dev, EV_KEY, KEY_DOWN);
+  input_set_capability(controller->i_dev, EV_KEY, KEY_LEFT);
+  input_set_capability(controller->i_dev, EV_KEY, KEY_RIGHT);
 
   int err = input_register_device(controller->i_dev);
   if (err) {
