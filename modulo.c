@@ -38,7 +38,7 @@ static void handle_button_pressed(const unsigned char* data, struct usb_controll
   if(data[3]  == BUTTON_PRESSED){
     unsigned char colored_buttons = data[4];
     unsigned char aux_buttons = data[5];
-    input_report_key(controller->i_dev, KEY_A, colored_buttons & A_BUTTON);
+    input_report_key(controller->i_dev, KEY_SPACE, colored_buttons & A_BUTTON);
     input_report_key(controller->i_dev, KEY_B, colored_buttons & B_BUTTON);
     input_report_key(controller->i_dev, KEY_X, colored_buttons & X_BUTTON);
     input_report_key(controller->i_dev, KEY_Y, colored_buttons & Y_BUTTON);
@@ -191,7 +191,7 @@ static int meu_driver_usb_probe(struct usb_interface *interface, const struct us
   usb_fill_int_urb(controller->my_urb, dev, controller->pipe, controller->buffer, 64, read_callback, controller, ep_irq_in->bEndpointAddress);
 
 
-  input_set_capability(controller->i_dev, EV_KEY, KEY_A);
+  input_set_capability(controller->i_dev, EV_KEY, KEY_SPACE);
   input_set_capability(controller->i_dev, EV_KEY, KEY_B);
   input_set_capability(controller->i_dev, EV_KEY, KEY_X);
   input_set_capability(controller->i_dev, EV_KEY, KEY_Y);
